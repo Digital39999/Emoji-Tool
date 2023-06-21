@@ -1,4 +1,4 @@
-import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Avatar, Input, Button, ButtonGroup, useMediaQuery } from '@chakra-ui/react';
+import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Tooltip } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { useCallback, useState } from 'react';
 
@@ -100,14 +100,12 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 				_hover={{
 					cursor: 'pointer',
 					backgroundColor: theme === 'dark' ? '#2e3035' : '#f7f7f7',
-					'#username': {
-						textDecoration: 'underline',
-					},
 				}}
 			>
-				<Avatar
+				<Image
 					src='/discord.png'
-					size='sm'
+					boxSize={10}
+					borderRadius={'full'}
 					mr={2}
 					cursor='pointer'
 				/>
@@ -181,8 +179,8 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 			<VStack p={isMobile ? 3 : 0} align={'center'} spacing={5} h='100%'>
 				<Box
 					zIndex={10}
-					w={{ base: '100%', md: '20%' }}
-					minW="315px"
+					w={{ base: '100%', md: '25%' }}
+					minW="340px"
 					borderRadius={isMobile ? '2xl' : 'none'}
 					bg="#36393f"
 					p={4}
@@ -196,7 +194,20 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 				>
 					<>
 						<Flex alignItems='center' justifyContent='space-between'>
-							<Text fontSize={'md'} opacity={1}>{`${weekday}, ${month} ${day}, ${year}, ${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`}</Text>
+							<Tooltip
+								label='What are you looking at bozo? problem?'
+								bg='#5961ec'
+								color='white'
+								p={1}
+								px={3}
+								rounded='md'
+								hasArrow
+								arrowSize={6}
+								arrowShadowColor='rgba(0, 0, 0, 0.1)'
+								my={1}
+							>
+								<Text fontSize={'md'} opacity={1}>{`${weekday}, ${month} ${day}, ${year}, ${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`}</Text>
+							</Tooltip>
 						</Flex>
 						<Divider mt={1} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between'>
