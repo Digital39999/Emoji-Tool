@@ -1,6 +1,6 @@
 import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Tooltip } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type Emojis = Record<string, Record<string, string>>;
 
@@ -25,7 +25,9 @@ export async function getEmojis() {
 export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 	const [currentEmojiShown, setCurrentEmojiShown] = useState<string | null>(null);
 	const [isInputInvalid, setInvalidInput] = useState(false);
+	const [time, setTime] = useState(new Date());
 
+	const isMobile = useMediaQuery('(max-width: 768px)')[0];
 	const Toast = useToast();
 
 	const handleCopyClick = (id: string, url: string) => {
@@ -73,20 +75,13 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 		});
 	};
 
-	const date = new Date();
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setTime(new Date());
+		}, 1000);
 
-	const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-	const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getMonth()];
-
-	const day = date.getDate();
-	const year = date.getFullYear();
-
-	let hours = date.getHours();
-	const minutes = date.getMinutes();
-	const ampm = hours >= 12 ? 'PM' : 'AM';
-
-	hours %= 12;
-	hours = hours || 12;
+		return () => clearInterval(interval);
+	}, []);
 
 	const makeDiscordPreview = useCallback((url: string, theme: string, justEmoji?: boolean) => {
 		return (
@@ -172,8 +167,6 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 		);
 	}, []);
 
-	const isMobile = useMediaQuery('(max-width: 768px)')[0];
-
 	return (
 		<Flex minH="100vh" bg="#4b4f56" color="white" overflow="hidden" flexDir={{ base: 'column', md: 'row' }}>
 			<VStack p={isMobile ? 3 : 0} align={'center'} spacing={5} h='100%'>
@@ -195,7 +188,7 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 					<>
 						<Flex alignItems='center' justifyContent='space-between'>
 							<Tooltip
-								label='What are you looking at bozo? problem?'
+								label={'In my defence, this looks nice here? doesn\'t it?'}
 								bg='#5961ec'
 								color='white'
 								p={1}
@@ -206,7 +199,16 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 								arrowShadowColor='rgba(0, 0, 0, 0.1)'
 								my={1}
 							>
-								<Text fontSize={'md'} opacity={1}>{`${weekday}, ${month} ${day}, ${year}, ${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`}</Text>
+								<Text fontSize={'md'} opacity={1}>{time.toLocaleString('en-US', {
+									weekday: 'long',
+									month: 'long',
+									day: 'numeric',
+									year: 'numeric',
+									hour: 'numeric',
+									minute: '2-digit',
+									second: '2-digit',
+									hour12: true,
+								})}</Text>
 							</Tooltip>
 						</Flex>
 						<Divider mt={1} mb={3} />
