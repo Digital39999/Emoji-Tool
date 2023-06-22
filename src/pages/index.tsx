@@ -231,7 +231,7 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 									const emojiIdRegex = /^(\d+)$/i;
 
 									const id = e.target.value.match(discordUrlRegex)?.[1] || e.target.value.match(discordInAppRegex)?.[2] || e.target.value.match(emojiIdRegex)?.[1];
-									if (id) setCurrentEmojiShown(`https://cdn.discordapp.com/emojis/${id}.webp`);
+									if (id) setCurrentEmojiShown(`https://cdn.discordapp.com/emojis/${id}.${e.target.value.match(discordUrlRegex)?.[2] || e.target.value.match(discordInAppRegex)?.[3] || 'gif'}`);
 									else {
 										setCurrentEmojiShown(currentEmojiShown || 'https://cdn.crni.xyz/r/status.png');
 										setInvalidInput(true);
