@@ -35,11 +35,9 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 	const [currentEmojiShown, setCurrentEmojiShown] = useState<string | null>(null);
 	const [isInputInvalid, setInvalidInput] = useState(false);
 	const [copyActualId, setCopyActualId] = useState(false);
-	const [time, setTime] = useState(new Date());
 
 	const isMobile = useMediaQuery('(max-width: 768px)')[0];
 	const Toast = useToast();
-	console.log(emojiData);
 
 	const handleCopyClick = (id: string, url: string, actual: string) => {
 		setCurrentEmojiShown(url);
@@ -85,14 +83,6 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 			},
 		});
 	};
-
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setTime(new Date());
-		}, 1000);
-
-		return () => clearInterval(interval);
-	}, []);
 
 	const makeDiscordPreview = useCallback((url: string, theme: string, justEmoji?: boolean) => {
 		return (
@@ -197,32 +187,6 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 					}}
 				>
 					<>
-						<Flex alignItems='center' justifyContent='space-between'>
-							<Tooltip
-								label={'In my defence, this looks nice here? doesn\'t it?'}
-								bg='#5961ec'
-								color='white'
-								p={1}
-								px={3}
-								rounded='md'
-								hasArrow
-								arrowSize={6}
-								arrowShadowColor='rgba(0, 0, 0, 0.1)'
-								my={1}
-							>
-								<Text fontSize={'md'} opacity={1}>{time.toLocaleString('en-US', {
-									weekday: 'short',
-									month: 'short',
-									day: 'numeric',
-									year: 'numeric',
-									hour: 'numeric',
-									minute: '2-digit',
-									second: '2-digit',
-									hour12: true,
-								})}</Text>
-							</Tooltip>
-						</Flex>
-						<Divider mt={1} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between'>
 							<VStack w='100%' justifyContent='space-between' h='100%'>
 								{makeDiscordPreview(currentEmojiShown || 'https://cdn.crni.xyz/r/status.png', 'light')}
