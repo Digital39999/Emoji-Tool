@@ -1,20 +1,29 @@
-import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Tooltip } from '@chakra-ui/react';
+import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Tooltip, Switch } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { useCallback, useEffect, useState } from 'react';
 
-type Emojis = Record<string, Record<string, string>>;
+export type Emojis = Record<string, Record<string, string>>;
+export type EmojisOut = Record<string, Record<string, {
+	id: string;
+	url: string;
+	emoji: string;
+}>>;
 
 export async function getEmojis() {
 	const response: { data: Emojis } = await fetch('https://api.crni.xyz/emojis').then((res) => res.json()).catch(() => null);
 	if (!response || !response.data) return null;
 
-	const out: Emojis = {};
+	const out: EmojisOut = {};
 
 	for (const [category, emojis] of Object.entries(response.data)) {
 		out[category] = {};
 
 		for (const [name, dc] of Object.entries(emojis)) {
-			out[category][`${category}.${name}`] = `https://cdn.discordapp.com/emojis/${dc?.split(':')[2]?.replace('>', '')}.png`?.replace(' ', '');
+			out[category][`${category}.${name}`] = {
+				id: `${category}.${name}`,
+				url: `https://cdn.discordapp.com/emojis/${dc?.split(':')[2]?.replace('>', '')}.png`?.replace(' ', ''),
+				emoji: dc,
+			};
 		}
 	}
 
@@ -22,20 +31,22 @@ export async function getEmojis() {
 }
 
 
-export default function HomePage({ emojiData }: { emojiData: Emojis }) {
+export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 	const [currentEmojiShown, setCurrentEmojiShown] = useState<string | null>(null);
 	const [isInputInvalid, setInvalidInput] = useState(false);
+	const [copyActualId, setCopyActualId] = useState(false);
 	const [time, setTime] = useState(new Date());
 
 	const isMobile = useMediaQuery('(max-width: 768px)')[0];
 	const Toast = useToast();
+	console.log(emojiData);
 
-	const handleCopyClick = (id: string, url: string) => {
+	const handleCopyClick = (id: string, url: string, actual: string) => {
 		setCurrentEmojiShown(url);
 
-		navigator.clipboard.writeText(id);
+		navigator.clipboard.writeText(copyActualId ? actual : id);
 		Toast({
-			description: `Emoji ${id} copied to clipboard`,
+			description: `Emoji ${copyActualId ? actual : id} copied to clipboard.`,
 			status: 'success',
 			duration: 2000,
 			isClosable: true,
@@ -200,8 +211,8 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 								my={1}
 							>
 								<Text fontSize={'md'} opacity={1}>{time.toLocaleString('en-US', {
-									weekday: 'long',
-									month: 'long',
+									weekday: 'short',
+									month: 'short',
 									day: 'numeric',
 									year: 'numeric',
 									hour: 'numeric',
@@ -241,6 +252,16 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 								}}
 							/>
 						</Flex>
+						<Divider mt={3} mb={3} />
+						<Flex alignItems='center' justifyContent='space-between'>
+							<Text fontSize='md' textStyle='bold' style={{ userSelect: 'none' }}>Actual Emoji Id</Text>
+							<Switch
+								size='lg'
+								ml={2}
+								isChecked={copyActualId}
+								onChange={() => setCopyActualId(!copyActualId)}
+							/>
+						</Flex>	
 						<Divider mt={3} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between' w='100%' overflow='hidden' flexWrap='wrap'>
 							<ButtonGroup spacing={1.5} w='100%' overflow='hidden' mb={2}>
@@ -289,7 +310,7 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 								mt={2}
 								mb={-2}
 							>
-								{Object.entries(emojis || {}).map(([id, url], index) => {
+								{Object.entries(emojis || {}).map(([id, data], index) => {
 									return (
 										<Flex
 											key={id}
@@ -299,15 +320,14 @@ export default function HomePage({ emojiData }: { emojiData: Emojis }) {
 											_hover={{
 												bg: 'rgba(255, 255, 255, 0.1)',
 												transition: 'all .2s ease',
-
 											}}
 											sx={{ aspectRatio: '1/1' }}
 											transition={'all .2s ease'}
-											onClick={() => handleCopyClick(id, url)}
+											onClick={() => handleCopyClick(id, data.url, data.emoji)}
 											h='80px'
 										>
 											<Image
-												src={url}
+												src={data.url}
 												alt={id}
 												w='100%'
 												h='100%'
