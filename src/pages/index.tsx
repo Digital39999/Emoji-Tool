@@ -1,6 +1,7 @@
-import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Tooltip, Switch } from '@chakra-ui/react';
+import { Image, Box, Divider, Text, SimpleGrid, Flex, useToast, HStack, VStack, CloseButton, Input, Button, ButtonGroup, useMediaQuery, Switch } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import useDebounce from '../utils/useDebounce';
 
 export type Emojis = Record<string, Record<string, string>>;
 export type EmojisOut = Record<string, Record<string, {
@@ -30,14 +31,46 @@ export async function getEmojis() {
 	return out;
 }
 
-
 export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 	const [currentEmojiShown, setCurrentEmojiShown] = useState<string | null>(null);
+
 	const [isInputInvalid, setInvalidInput] = useState(false);
 	const [copyActualId, setCopyActualId] = useState(false);
+	const [isThereEmoji, setIsThereEmoji] = useState(false);
+
+	const [debouncedSearch, setDebouncedSearch] = useState('');
+	const [search, setSearch] = useState('');
+
+	useDebounce(() => {
+		setDebouncedSearch(search);
+	}, [search]);
 
 	const isMobile = useMediaQuery('(max-width: 768px)')[0];
 	const Toast = useToast();
+
+	const categoryWithSearch = useMemo(() => {
+		if (!debouncedSearch) {
+			setIsThereEmoji(true);
+			return emojiData;
+		}
+
+		const out: EmojisOut = {};
+
+		for (const [category, emojis] of Object.entries(emojiData)) {
+			out[category] = {};
+
+			for (const [name, emoji] of Object.entries(emojis)) {
+				if (emoji.emoji.includes(debouncedSearch)) {
+					out[category][name] = emoji;
+				}
+			}
+		}
+
+		const isEmpty = Object.keys(out).length === 0 && out.constructor === Object;
+		setIsThereEmoji(!isEmpty);
+
+		return out;
+	}, [emojiData, debouncedSearch]);
 
 	const handleCopyClick = (id: string, url: string, actual: string) => {
 		setCurrentEmojiShown(url);
@@ -198,6 +231,14 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 						<Divider mt={3} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between'>
 							<Input
+								isInvalid={!isThereEmoji}
+								placeholder='Search for an emoji..'
+								onChange={(e) => setSearch(e.target.value)}
+							/>
+						</Flex>
+						<Divider mt={3} mb={3} />
+						<Flex alignItems='center' justifyContent='space-between'>
+							<Input
 								isInvalid={isInputInvalid}
 								placeholder='Custom Emoji (Url, Id, Syntax)'
 								onChange={(e) => {
@@ -218,14 +259,14 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 						</Flex>
 						<Divider mt={3} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between'>
-							<Text fontSize='md' textStyle='bold' style={{ userSelect: 'none' }}>Actual Emoji Id</Text>
+							<Text fontSize='md' textStyle='bold' style={{ userSelect: 'none' }}>Copy Actual Emoji Id</Text>
 							<Switch
 								size='lg'
 								ml={2}
 								isChecked={copyActualId}
 								onChange={() => setCopyActualId(!copyActualId)}
 							/>
-						</Flex>	
+						</Flex>
 						<Divider mt={3} mb={3} />
 						<Flex alignItems='center' justifyContent='space-between' w='100%' overflow='hidden' flexWrap='wrap'>
 							<ButtonGroup spacing={1.5} w='100%' overflow='hidden' mb={2}>
@@ -251,12 +292,12 @@ export default function HomePage({ emojiData }: { emojiData: EmojisOut }) {
 					},
 				}}
 			>
-				{Object.entries(emojiData || {}).map(([category, emojis]) => {
+				{Object.entries(categoryWithSearch || {}).map(([category, emojis]) => {
 					return !Object.keys(emojis || {}).length ? (
 						<></>
 					) : (
 						<Box key={category} textAlign='center' fontWeight='bold' p={2}>
-							<Box display='flex' alignItems='center' justifyContent='center' position='relative' >
+							<Box display='flex' alignItems='center' justifyContent='center' position='relative' w='100%'>
 								<Divider />
 								<Box alignItems={'center'} justifyContent={'center'} display={'flex'} ml={2} mr={2}>
 									<Text fontSize='2xl'>
